@@ -10,7 +10,7 @@ React + FastAPI + SQLite + LiteLLM. Every reply shows where it came from (`LLM_C
 | Backend base URL | `https://ai-chat-app-7zvg.onrender.com` |
 | Health check | `https://ai-chat-app-7zvg.onrender.com/health` |
 | GitHub repo | `https://github.com/Shubham07004/ai-chat-app` |
-| Demo video | `<video link baad mein>` |
+| Demo video | `https://youtu.be/Vdrdliqbnxg` |
 
 
 ## 2. Run locally
