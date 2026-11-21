@@ -6,13 +6,12 @@ React + FastAPI + SQLite + LiteLLM. Every reply shows where it came from (`LLM_C
 
 | What | URL |
 | --- | --- |
-| Frontend | `https://<your-frontend>.vercel.app` |
-| Backend base URL | `https://<your-backend>.onrender.com` |
-| Health check | `https://<your-backend>.onrender.com/health` |
-| GitHub repo | `https://github.com/<you>/<repo>` |
-| Demo video | `<link>` |
+| Frontend | `https://ai-chat-app-zeta-pearl.vercel.app` |
+| Backend base URL | `https://ai-chat-app-7zvg.onrender.com` |
+| Health check | `https://ai-chat-app-7zvg.onrender.com/health` |
+| GitHub repo | `https://github.com/Shubham07004/ai-chat-app` |
+| Demo video | `<video link baad mein>` |
 
-*(Fill these in after deploying; see "Deploying" below.)*
 
 ## 2. Run locally
 
@@ -55,7 +54,7 @@ The tests use the real FastAPI app, the real SQLite file and LiteLLM's real cach
 
 See `.env.example`. The important ones: `LLM_API_KEYS` (comma-separated pool, ids `key_1`, `key_2`, ...), `LLM_MODEL` (any LiteLLM model name that matches your keys), `DATABASE_URL`, `ALLOWED_ORIGINS`, `ENABLE_FAILURE_SIMULATION`.
 
-> **Model note:** the default is `gemini/gemini-2.5-flash`. If your keys are for another provider, set `LLM_MODEL` (for example `gpt-4o-mini` or `groq/llama-3.3-70b-versatile`). The API contract's example uses `gemini/gemini-2.0-flash`, which also works if your account still serves it.
+>> **Model note:** the code default is `gemini/gemini-2.5-flash`, but new Google AI Studio projects no longer get access to 2.5 models (404). This deployment sets `LLM_MODEL=gemini/gemini-3.5-flash-lite`. If your keys are for another provider, set `LLM_MODEL` accordingly (for example `gpt-4o-mini` or `groq/llama-3.3-70b-versatile`).
 
 ## 3. Design decisions
 
@@ -124,13 +123,12 @@ curl -s -i -X POST $API/chat -H 'Content-Type: application/json' -d '{"session_i
 
 In the UI: every assistant reply shows source, model, latency and that request's input/output tokens. Open **Session options** to type `key_1=429` into the failure simulator, send a new message, and the reply footer will say it was answered by `key_2` after 1 failed key. Click **New chat** and resend an earlier first message to see `LLM_CACHE`.
 
-## 5. Setup Used
-
 * Editor: VS Code
 * AI tools: Claude (generated the first version of the code and tests; reviewed and run locally by me)
 * Stack: React 18 + Vite, FastAPI, LiteLLM, SQLite, Docker Compose, pytest
-
-*(Edit this section to match what you actually used.)*
+* Deployment: Render (backend, Docker, free plan), Vercel (frontend)
+* Model: `gemini/gemini-3.5-flash-lite`
+ with 2 Gemini API keys
 
 ## 6. Bonus features
 
