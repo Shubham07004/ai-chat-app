@@ -12,6 +12,7 @@ React + FastAPI + SQLite + LiteLLM. Every reply shows where it came from (`LLM_C
 | GitHub repo | `https://github.com/Shubham07004/ai-chat-app` |
 | Demo video | `https://youtu.be/Vdrdliqbnxg` |
 
+**Notes on the deployed instance:** the backend runs on Render's free plan, so the first request after inactivity can take about 50 seconds while it wakes up (open `/health` first). The free plan has no persistent disk, so chat history resets when the instance restarts or redeploys. Failure simulation is enabled (`ENABLE_FAILURE_SIMULATION=true`) for the failover demo.
 
 ## 2. Run locally
 
@@ -24,6 +25,8 @@ make down                   # stop (the SQLite volume is kept)
 ```
 
 `make up` creates `.env` from `.env.example` if it is missing. Check the stack with `curl localhost:8000/health`.
+
+On Windows without `make`, run `docker compose up --build` instead (and `docker compose down` to stop).
 
 ### Without Docker
 
@@ -54,7 +57,7 @@ The tests use the real FastAPI app, the real SQLite file and LiteLLM's real cach
 
 See `.env.example`. The important ones: `LLM_API_KEYS` (comma-separated pool, ids `key_1`, `key_2`, ...), `LLM_MODEL` (any LiteLLM model name that matches your keys), `DATABASE_URL`, `ALLOWED_ORIGINS`, `ENABLE_FAILURE_SIMULATION`.
 
->> **Model note:** the code default is `gemini/gemini-2.5-flash`, but new Google AI Studio projects no longer get access to 2.5 models (404). This deployment sets `LLM_MODEL=gemini/gemini-3.5-flash-lite`. If your keys are for another provider, set `LLM_MODEL` accordingly (for example `gpt-4o-mini` or `groq/llama-3.3-70b-versatile`).
+> **Model note:** the code default is `gemini/gemini-2.5-flash`, but new Google AI Studio projects no longer get access to 2.5 models (404). This deployment sets `LLM_MODEL=gemini/gemini-3.5-flash-lite`. If your keys are for another provider, set `LLM_MODEL` accordingly (for example `gpt-4o-mini` or `groq/llama-3.3-70b-versatile`).
 
 ## 3. Design decisions
 
@@ -74,7 +77,7 @@ See `.env.example`. The important ones: `LLM_API_KEYS` (comma-separated pool, id
 * Entries expire after `CACHE_TTL_SECONDS`.
 
 ### SQLite session storage
-* Stdlib `sqlite3`; the file path comes from `DATABASE_URL` (`sqlite:////data/app.db` in Docker, a named volume), so history survives container restarts. Schema is created on startup.
+* Stdlib `sqlite3`; the file path comes from `DATABASE_URL` (`sqlite:////data/app.db` in Docker, a named volume), so history survives container restarts locally. The free Render deployment has no disk attached, so there history resets when the instance is replaced. Schema is created on startup.
 * `messages` follows the required schema (plus an index on `(session_id, id)`). A small `sessions` table stores the optional per-session system prompt.
 * Each successful turn (user message + assistant reply + metadata JSON) is written in **one transaction**. Failed requests (422, 503) write nothing, and an unknown session stays an unknown session (404).
 * The client only sends the new message. The server loads the session's history, sends the last `MAX_HISTORY_MESSAGES` (default 40) to the model, and a per-session lock keeps two quick messages from interleaving.
@@ -123,12 +126,13 @@ curl -s -i -X POST $API/chat -H 'Content-Type: application/json' -d '{"session_i
 
 In the UI: every assistant reply shows source, model, latency and that request's input/output tokens. Open **Session options** to type `key_1=429` into the failure simulator, send a new message, and the reply footer will say it was answered by `key_2` after 1 failed key. Click **New chat** and resend an earlier first message to see `LLM_CACHE`.
 
+## 5. Setup Used
+
 * Editor: VS Code
 * AI tools: Claude (generated the first version of the code and tests; reviewed and run locally by me)
 * Stack: React 18 + Vite, FastAPI, LiteLLM, SQLite, Docker Compose, pytest
 * Deployment: Render (backend, Docker, free plan), Vercel (frontend)
-* Model: `gemini/gemini-3.5-flash-lite`
- with 2 Gemini API keys
+* Model: `gemini/gemini-3.5-flash-lite` with 2 Gemini API keys
 
 ## 6. Bonus features
 
@@ -149,8 +153,8 @@ In the UI: every assistant reply shows source, model, latency and that request's
 
 **Frontend (Vercel, Netlify, Cloudflare Pages, or Render static site)**
 1. Root directory `frontend`, build command `npm run build`, output directory `dist`.
-2. Set the build env var `VITE_API_URL=https://<your-backend>`.
-3. Add the resulting frontend URL to the backend's `ALLOWED_ORIGINS` and redeploy the backend.
+2. Set the build env var `VITE_API_URL=https://<your-backend>` (no trailing slash).
+3. Add the resulting frontend URL to the backend's `ALLOWED_ORIGINS` (exact, no trailing slash) and redeploy the backend.
 
 ## Repository layout
 
